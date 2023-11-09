@@ -3,8 +3,8 @@ from django.urls import path
 
 urlpatterns = [
     path('details/<slug:profileId>', views.accountDetails),
-    # path('resend_link/', views.resend_link),
-    # path('psreset_link/', views.psreset_link),
-    # path('reset/', views.reset),
+    path('user_data/', views.change_user_data),
+    path('profile_data/', views.change_profile_data),
+    path('security/', views.change_security_data),
     # path('verify/', views.verify_account),
 ]
