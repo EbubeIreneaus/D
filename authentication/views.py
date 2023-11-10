@@ -106,7 +106,7 @@ def resend_link(request):
                             'If the button does not work, you can also copy and paste the following link into ' \
                             'your browser: </p ><p> {link} </p ><p> We are excited ' \
                             'to have you on board! </p></div>' \
-                            '</div>'.format(link=f'https://springfieldinvest.com/auth/verify/{profile.id}/{key}')
+                            '</div>'.format(link=f'https://dg-assets.netlify.app/auth/verify/{profile.id}/{key}')
         mail.send_mail()
     except Exception as e:
         return HttpResponse(str(e))
