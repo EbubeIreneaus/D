@@ -3,6 +3,7 @@ import re
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.core.mail import mail_admins, EmailMultiAlternatives
 
 from authentication.models import Profile
 from django.http import JsonResponse, HttpResponse
@@ -14,11 +15,14 @@ import random
 import string
 from mail import Mail
 from .serializers import TransactionSerializer as ts
+
+
 # Create your views here.
 
 
 class customException(Exception):
     pass
+
 
 def validate_deposit(amount, plan, profileId):
     if not amount or amount == '' or amount is None or not plan or plan == '' or plan is None:
@@ -62,9 +66,9 @@ def send_deposit_mail(amount, id, channel, address, email):
                             f'<li><span style="font-size:16px"><strong>Payment Channel: {channel}</strong></span></li><br><li><span style="font-size:16px">' \
                             f'<strong>Channel Address:  {address} </strong></span></li><li><span style="font-size:16px">' \
                             '<strong>Transaction Status: pending</strong></span></li></ul><br>' \
-                             '\<p><span style="font-size:16px">Kindly reply this mail with a proof of payment or reach us out at' \
+                            '\<p><span style="font-size:16px">Kindly reply this mail with a proof of payment or reach us out at' \
                             ' <a href="mailto:support@digitalassets.com.ng">support@digitalassets.com.ng</a>&nbsp;or visit ' \
-                            '<a href="https://digitalassets.com">https://digitalassets.com</a>&nbsp;</span></p>'\
+                            '<a href="https://digitalassets.com">https://digitalassets.com</a>&nbsp;</span></p>' \
                             '<h3><span style="color:#2ecc71"><br>' \
                             '<span style="font-size:12px"><strong><span style="font-family:Arial,Helvetica,sans-serif">' \
                             'Thank you for investing with Digital Assets, your finacial growth is all we care for</span></strong>' \
@@ -89,7 +93,7 @@ def send_invest_mail(amount, id, plan, email):
     elif plan == "ultra":
         roi = 9 * amount
         period = "90days"
-    total_return = f'${float(roi+amount):,.2f}'
+    total_return = f'${float(roi + amount):,.2f}'
     roi = f'${roi:,.2f}'
     amount = f'${amount:,.2f}'
     try:
@@ -114,6 +118,7 @@ def send_invest_mail(amount, id, plan, email):
     except Exception as e:
         pass
 
+
 def generate_transact_key(length):
     key = ''
     for i in range(length):
@@ -124,6 +129,7 @@ def generate_transact_key(length):
     except Transaction.DoesNotExist:
         pass
     return key
+
 
 @csrf_exempt
 def deposit(request):
@@ -143,11 +149,13 @@ def deposit(request):
             transaction = Transaction.objects.create(profile=profile, transact_id=key, amount=amount, channel=channel,
                                                      type='deposit')
             send_deposit_mail(amount=amount, id=key, channel=channel, address=data['wallet'], email=profile.user.email)
-            return JsonResponse({'status': 'success', 'channel': channel,'address': data['wallet']})
+            return JsonResponse({'status': 'success', 'id': transaction.transact_id, 'channel': channel,
+                                 'address': data['wallet']})
         else:
-            return JsonResponse({'status': 'failed', 'code':str(deposit.errors)})
+            return JsonResponse({'status': 'failed', 'code': str(deposit.errors)})
     except Exception as e:
-        return JsonResponse({'status':'failed', "code": str(e)})
+        return JsonResponse({'status': 'failed', "code": str(e)})
+
 
 @csrf_exempt
 def invest(request):
@@ -164,19 +172,20 @@ def invest(request):
             return JsonResponse({'status': 'failed', 'code': 'bad_data_integrity'})
 
         transaction = Transaction(profile=profile, transact_id=key, plan=data['plan'], amount=data['amount'],
-                                 type='invest')
+                                  type='invest')
         account = Account.objects.get(profile__id=data['profileId'])
         account.balance = account.balance - data['amount']
         account.active_investment += data['amount']
         transaction.save()
         account.save()
         try:
-            send_invest_mail(amount=data['amount'],id=transaction.id, plan=data['plan'], email=profile.user.email)
+            send_invest_mail(amount=data['amount'], id=transaction.id, plan=data['plan'], email=profile.user.email)
         except Exception:
             pass
         return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'status': 'failed', 'code': str(e)})
+
 
 def validate_withdraw(amount, profileid, wallet_address, password):
     try:
@@ -190,7 +199,7 @@ def validate_withdraw(amount, profileid, wallet_address, password):
             user = User.objects.get(id=profile.user.id)
             user = authenticate(username=user.username, password=password)
             if user is None:
-                raise  customException("Incorrect Password")
+                raise customException("Incorrect Password")
         except:
             raise customException("Incorrect Password")
         account = Account.objects.get(profile__id=profileid)
@@ -204,7 +213,7 @@ def validate_withdraw(amount, profileid, wallet_address, password):
         return {'status': 'failed', 'code': str(e)}
     except Exception as e:
         return {'status': 'failed', 'code': 'unknown error please try again later!!!'}
-    return {'status':'true'}
+    return {'status': 'true'}
 
 
 @csrf_exempt
@@ -228,5 +237,33 @@ def withdraw(request):
     except Exception as e:
         return JsonResponse({'status': 'failed', 'code': str(e)})
 
+@csrf_exempt
+def pay_slip(request):
+    transactId = request.POST.get('id', '')
+    amount = request.POST.get('amount', '')
+    channel = request.POST.get('channel', '')
+    file = request.FILES.get('file', '')
 
+    try:
+        message = f'<h4><font color="#000000" style=""><span style="font-family: &quot;Arial Black&quot;;">' \
+                  f'<b style="">Some just sent you a payment slip:</b></span></font></h4><p><font color="#000000" face="Arial Black">' \
+                  f'<b>Id: </b><span> {transactId} </span></font></p>' \
+                  f'<p><font color="#000000" face="Arial Black"><b>Amount:</b><span> {amount} </span></font></p>' \
+                  f'<p><font color="#000000" face="Arial Black"><b>Channel:</b><span> {channel} </span></font></p>' \
+                  f'<p style="text-align: left;"><font color="#000000" face="Arial Black"><span style="font-family: Arial;">' \
+                  f'see payment slip below</span></font></p>'
+        try:
+            email = EmailMultiAlternatives(
+                subject="Payment Confirmation",
+                body="Someone Just Sent A payment slip",
+                to=["okigweebube7@gmail.com"],
 
+            )
+            email.attach_alternative(message, 'text/html')
+            email.attach(file.name, file.read(), file.content_type)
+            email.send(fail_silently=False)
+        except Exception as e:
+            return JsonResponse({'status': 'failed', "code": str(e)})
+        return JsonResponse({'status': 'success'})
+    except:
+        return JsonResponse({'status': 'failed'})

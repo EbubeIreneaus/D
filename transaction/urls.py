@@ -6,7 +6,7 @@ urlpatterns = [
     path('deposit/', views.deposit),
     path('invest/', views.invest),
     path('withdraw/', views.withdraw),
-    # path('psreset_link/', views.psreset_link),
+    path('pay_slip/', views.pay_slip),
     # path('reset/', views.reset),
     # path('verify/', views.verify_account),
 ]

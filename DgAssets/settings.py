@@ -106,7 +106,7 @@ EMAIL_PORT = 465
 EMAIL_HOST_USER = 'alfredebube7@gmail.com'
 EMAIL_HOST_PASSWORD = 'qsuomhfdhunuiome'
 EMAIL_USE_SSL = True
-
+DEFAULT_FROM_EMAIL = 'alfredebube7@gmail.com'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
