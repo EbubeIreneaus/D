@@ -71,3 +71,15 @@ def change_security_data(request):
         except Exception:
             pass
     return JsonResponse({'status':'failed'})
+
+def get_referrals(request):
+    profileId = request.GET.get('profile-id', '')
+
+    try:
+        profiles = Profile.objects.filter(referred_by__id=profileId)
+        serialProfiles = ProfileSerial(profiles, many=True)
+        return JsonResponse(serialProfiles.data, safe=False)
+    except Exception as e:
+        return JsonResponse({'status':'failed', 'code':str(e)})
+
+

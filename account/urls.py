@@ -6,5 +6,5 @@ urlpatterns = [
     path('user_data/', views.change_user_data),
     path('profile_data/', views.change_profile_data),
     path('security/', views.change_security_data),
-    # path('verify/', views.verify_account),
+    path('get_referrals/', views.get_referrals),
 ]
