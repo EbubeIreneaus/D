@@ -93,23 +93,23 @@ def resend_link(request):
         email = profile.user.email
     except Exception as e:
         return JsonResponse({'status': 'failed', 'code': str(e)})
-    try:
-        mail = Mail(subject="Email Verification")
-        mail.recipient = [email]
-        mail.html_message = '<div><div style="font-family: Arial, sans-serif;max-width: 600px;margin: 0 auto;' \
-                            'padding: 20px;border: 1px solid #e9e9e9;border-radius: 5px;"><h2> Dear User,' \
-                            ' </h2 ><p>Thank you for registering on our website. Please click on the link below ' \
-                            'to verify your account:</p ><p><a href = "{link}"style = "display:' \
-                            ' inline-block;background-color: #4caf50;border: none;color: white;padding: 10px 20px;' \
-                            'text-align: center;text-decoration: none;font-size: 16px;margin: 4px 2px;' \
-                            'cursor: pointer;border-radius: 5px;">Verify Account</a></p ><p>' \
-                            'If the button does not work, you can also copy and paste the following link into ' \
-                            'your browser: </p ><p> {link} </p ><p> We are excited ' \
-                            'to have you on board! </p></div>' \
-                            '</div>'.format(link=f'https://dg-assets.netlify.app/auth/verify/{profile.id}/{key}')
-        mail.send_mail()
-    except Exception as e:
-        return HttpResponse(str(e))
+    # try:
+    mail = Mail(subject="Email Verification")
+    mail.recipient = [email]
+    mail.html_message = '<div><div style="font-family: Arial, sans-serif;max-width: 600px;margin: 0 auto;' \
+                        'padding: 20px;border: 1px solid #e9e9e9;border-radius: 5px;"><h2> Dear User,' \
+                        ' </h2 ><p>Thank you for registering on our website. Please click on the link below ' \
+                        'to verify your account:</p ><p><a href = "{link}"style = "display:' \
+                        ' inline-block;background-color: #4caf50;border: none;color: white;padding: 10px 20px;' \
+                        'text-align: center;text-decoration: none;font-size: 16px;margin: 4px 2px;' \
+                        'cursor: pointer;border-radius: 5px;">Verify Account</a></p ><p>' \
+                        'If the button does not work, you can also copy and paste the following link into ' \
+                        'your browser: </p ><p> {link} </p ><p> We are excited ' \
+                        'to have you on board! </p></div>' \
+                        '</div>'.format(link=f'https://dg-assets.netlify.app/auth/verify/{profile.id}/{key}')
+    mail.send_mail()
+    # except Exception as e:
+    #     return HttpResponse(str(e))
     return JsonResponse({'status': 'success', 'profileId': profile.id})
 
 

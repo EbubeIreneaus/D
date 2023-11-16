@@ -101,12 +101,12 @@ DATABASES = {
 }
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST = 'rbx112.truehost.cloud'
 EMAIL_PORT = 465
-EMAIL_HOST_USER = 'alfredebube7@gmail.com'
-EMAIL_HOST_PASSWORD = 'qsuomhfdhunuiome'
+EMAIL_HOST_USER = 'service@digitalassets.com.ng'
+EMAIL_HOST_PASSWORD = 'eh8#UJ5Y56Eq(r'
 EMAIL_USE_SSL = True
-DEFAULT_FROM_EMAIL = 'alfredebube7@gmail.com'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

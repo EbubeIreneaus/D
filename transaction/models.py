@@ -39,56 +39,94 @@ class Transaction(models.Model):
             self.progress
 
 
-# def transaction_changed(instance_pk):
-#     try:
-#         with transaction.atomic():
-#             ts = Transaction.objects.select_for_update().get(pk=instance_pk)
-#             profile_id = ts.profile.pk
-#             account = Account.objects.select_for_update().get(profile__id=profile_id)
-#             now = datetime.datetime.now()
-#             tplan = {'bronze': 24, 'silver': 48, 'gold': 72, 'estate': 48, 'pro': 96}
-#             expires = datetime.datetime.fromtimestamp(time.time() + (60 * 60 * tplan[ts.plan]))
-#             if ts.status == 1:
-#                 amount = ts.amount
-#                 if ts.type == 'deposit':
-#                     ts.start_date = now
-#                     ts.end_date = expires
-#                     ts.progress = 'active'
-#                     account.active_investment = account.active_investment + amount
-#                     account.last_deposit = amount
-#                     ts.save()
-#                     account.save()
-#                 else:
-#                     account.last_withdraw = amount
-#                     account.balance = account.balance + amount
-#                     ts.progress = 'completed'
-#                     account.save()
-#                     ts.save()
-#                 print("success")
-#             else:
-#                 ts.progress = 'completed'
-#                 ts.save()
-#             return True
-#
-#     except Exception as e:
-#         print(str(e))
+def create_investment(instance_pk):
+    try:
+        with transaction.atomic():
+            ts = Transaction.objects.select_for_update().get(pk=instance_pk)
+            profile_id = ts.profile.id
+            account = Account.objects.select_for_update().get(profile__id=profile_id)
+            now = datetime.datetime.now()
+            tplan = {'standard': 125, 'silver': 168, 'premium': 720, 'ultra': 2160}
+            expires = datetime.datetime.fromtimestamp(time.time() + (60 * 60 * tplan[ts.plan]))
+            amount = ts.amount
+            ts.start_date = now
+            ts.end_date = expires
+            ts.progress = 'active'
+            ts.status = 'approved'
+            account.active_investment += amount
+            account.balance -= amount
+            ts.save()
+            account.save()
+            print('Completed')
+    except Exception as e:
+        print('error ' + str(e))
 
-# @receiver(pre_save, sender=Transaction)
-# def transactionApprove(sender, instance,  **kwargs):
-#     try:
-#         sender.old_value = sender.objects.get(pk=instance.pk)
+
+
+def transaction_changed(instance_pk):
+    try:
+        with transaction.atomic():
+            ts = Transaction.objects.select_for_update().get(pk=instance_pk)
+
+            profile_id = ts.profile.id
+            account = Account.objects.select_for_update().get(profile__id=profile_id)
+            # now = datetime.datetime.now()
+            # tplan = {'standard': 125, 'silver': 168, 'premium': 720, 'ultra': 2160}
+            # expires = datetime.datetime.fromtimestamp(time.time() + (60 * 60 * tplan[ts.plan]))
+            if ts.status == 'approved':
+                amount = ts.amount
+                if ts.type == 'deposit':
+                    # ts.start_date = now
+                    # ts.end_date = expires
+                    ts.progress = 'completed'
+                    account.balance = account.balance + amount
+                    account.last_deposit = amount
+                    ts.save()
+                    account.save()
+
+                    try:
+                        referral = Profile.objects.get(id=ts.profile.referred_by.id)
+                        referral_bonus = 0.10 * amount
+                        trans = Transaction.objects.create(profile=referral, type='referral',amount=referral_bonus,
+                                                           status='approved', progress='completed')
+                        ref_acct = Account.objects.get(profile__id=trans.profile.id)
+                        ref_acct.referral_bonus += amount
+                        ref_acct.save()
+                    except:
+                        pass
+                elif ts.type == 'withdraw':
+                    account.last_withdraw = amount
+                    account.balance = account.balance - amount
+                    ts.progress = 'completed'
+                    account.save()
+                    ts.save()
+                print("success")
+            else:
+                ts.progress = 'completed'
+                ts.save()
+            return True
+
+    except Exception as e:
+        print(str(e))
+
+@receiver(pre_save, sender=Transaction)
+def transactionApprove(sender, instance,  **kwargs):
+    try:
+        sender.old_value = sender.objects.get(pk=instance.pk)
+
+    except sender.DoesNotExist:
+        pass
 #
-#     except sender.DoesNotExist:
-#         pass
 #
-#
-# @receiver(post_save, sender=Transaction)
-# def transactionApprove(sender, instance, created, **kwargs):
-#     if not created:
-#         old_value = model_to_dict(sender.old_value)
-#         new_value = model_to_dict(instance)
-#         if old_value['status'] != new_value['status']:
-#             transaction_changed(instance.pk)
-#
-#     else:
-#         pass
+@receiver(post_save, sender=Transaction)
+def transactionApprove(sender, instance, created, **kwargs):
+    if not created:
+        old_value = model_to_dict(sender.old_value)
+        new_value = model_to_dict(instance)
+        if old_value['status'] != new_value['status']:
+            transaction_changed(instance.pk)
+
+    elif created:
+        value = model_to_dict(instance)
+        if value['type'] == 'invest':
+            create_investment(instance.pk)

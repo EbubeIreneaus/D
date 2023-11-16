@@ -4,6 +4,8 @@ import re
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.core.mail import mail_admins, EmailMultiAlternatives
+from django.db import transaction
+from django.utils import timezone
 
 from authentication.models import Profile
 from django.http import JsonResponse, HttpResponse
@@ -22,7 +24,26 @@ from .serializers import TransactionSerializer as ts
 
 class customException(Exception):
     pass
-
+def updateTransactions(userId):
+    try:
+        with transaction.atomic():
+            now = timezone.now()
+            ts = Transaction.objects.filter(profile__id=userId)
+            tplan = {'standard':0.25,'silver':0.599,'premium':3.6,'ultra':9.0}
+            for x in ts:
+                if x.type == 'invest' and now >= x.end_date and x.progress == 'active':
+                    trans = Transaction.objects.get(pk = x.pk)
+                    account = Account.objects.get(profile__id = trans.profile.id)
+                    earning = float(tplan[trans.plan]) * float(trans.amount)
+                    trans.progress = 'completed'
+                    account.balance = float(account.balance) + float(trans.amount) + float(earning)
+                    account.active_investment -= trans.amount
+                    account.Total_earnings = float(account.Total_earnings) + earning
+                    trans.save()
+                    account.save()
+    except Exception as e:
+        print(str(e))
+    return True
 
 def validate_deposit(amount, plan, profileId):
     if not amount or amount == '' or amount is None or not plan or plan == '' or plan is None:
@@ -46,13 +67,13 @@ def validate_deposit(amount, plan, profileId):
 
 def getTransact(request):
     profileId = request.GET.get('profileId', '')
-    # if updateTransactions(userId):
-    try:
-        transactions = Transaction.objects.filter(profile__id=profileId).order_by('-id')
-        st = ts(transactions, many=True)
-        return JsonResponse(st.data, safe=False)
-    except Exception as e:
-        return HttpResponse(str(e))
+    if updateTransactions(profileId):
+        try:
+            transactions = Transaction.objects.filter(profile__id=profileId).order_by('-id')
+            st = ts(transactions, many=True)
+            return JsonResponse(st.data, safe=False)
+        except Exception as e:
+            return HttpResponse(str(e))
 
 
 def send_deposit_mail(amount, id, channel, address, email):
