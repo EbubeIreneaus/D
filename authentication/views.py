@@ -130,6 +130,7 @@ def verify_account(request):
             try:
                 account = Account.objects.get(profile__id = profileId)
                 account.bonus = 5.00
+                account.balance += 5.00
                 account.save()
             except:
                 pass

@@ -91,6 +91,7 @@ def transaction_changed(instance_pk):
                                                            status='approved', progress='completed')
                         ref_acct = Account.objects.get(profile__id=trans.profile.id)
                         ref_acct.referral_bonus += amount
+                        ref_acct.balance += amount
                         ref_acct.save()
                     except:
                         pass
