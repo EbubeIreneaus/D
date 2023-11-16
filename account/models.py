@@ -12,4 +12,6 @@ class Account(models.Model):
     last_deposit = models.DecimalField(default=0.0, max_digits=10, decimal_places=2)
     last_withdraw = models.DecimalField(default=0.0, max_digits=10, decimal_places=2)
     referral_bonus = models.DecimalField(default=0.0, max_digits=10, decimal_places=2)
+    bonus = models.DecimalField(default=0.0, max_digits=10, decimal_places=2)
     date = models.DateField(auto_now=True)
+

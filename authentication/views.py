@@ -6,6 +6,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
+from transaction.models import Transaction
 from .models import Profile
 import random
 import string
@@ -126,6 +127,12 @@ def verify_account(request):
         if profile.verified:
             return JsonResponse({'status': 'failed'})
         if profile.key == key:
+            try:
+                account = Account.objects.get(profile__id = profileId)
+                account.bonus = 5.00
+                account.save()
+            except:
+                pass
             profile.verified = True
             profile.key = None
             profile.save()
