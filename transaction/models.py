@@ -33,7 +33,7 @@ class Transaction(models.Model):
                                                       ('declined', 'decline')], default="pending")
     progress = models.CharField(max_length=12, choices=[('pending','pending'),('active','active'),
                                                         ('completed', 'completed')], default='pending', editable=False)
-    date = models.DateTimeField(auto_now_add=True, null=True)
+    date = models.DateTimeField(auto_now_add=True, null=True, blank=True, editable=True)
 
     def __str__(self):
         return self.profile.user.first_name +" "+self.profile.user.last_name+" "+ str(self.amount)+' '+self.type+" "+\
