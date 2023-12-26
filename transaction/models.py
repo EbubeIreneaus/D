@@ -24,7 +24,7 @@ class Transaction(models.Model):
     channel = models.CharField(max_length=15, choices=[('BTC', 'BTC'), ('TETHER USDT', 'TETHER USDT'), ("BNB", "BNB"),("ETHEREUM", "ETHEREUM")],
                                default='BTC', null=True, blank=True)
     type = models.CharField(max_length=9, choices=[('deposit','deposit'),("invest", 'invest'),('withdraw', 'withdraw'),
-                                                   ('referral','referral')], default='deposit')
+                                                   ('referral','referral'), ("bonus","bonus"), ("received","received")], default='deposit')
     amount = models.DecimalField(decimal_places=2, max_digits=10)
     address = models.CharField(max_length=150, null=True, blank=True)
     start_date = models.DateTimeField(null=True, blank=True)
@@ -33,6 +33,7 @@ class Transaction(models.Model):
                                                       ('declined', 'decline')], default="pending")
     progress = models.CharField(max_length=12, choices=[('pending','pending'),('active','active'),
                                                         ('completed', 'completed')], default='pending', editable=False)
+    date = models.DateField(auto_now_add=True, null=True)
 
     def __str__(self):
         return self.profile.user.first_name +" "+self.profile.user.last_name+" "+ str(self.amount)+' '+self.type+" "+\

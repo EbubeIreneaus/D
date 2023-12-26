@@ -5,7 +5,8 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from transaction.views import updateTransactions
+from transaction.views import updateTransactions, generate_transact_key
+from transaction.models import Transaction
 from authentication.models import Profile
 from .serializers import AccountSerial
 from.models import Account
@@ -88,21 +89,29 @@ def get_referrals(request):
 
 def transfer(request):
     profileId = request.headers.get('profile-id', '')
-    amount = request.GET.get('amount', '')
+    amount = int(request.GET.get('amount', ''))
     total_debit = amount + (0.2 * amount)
     user = request.GET.get('user', '')
     try:
         profile = Profile.objects.get(id=profileId)
         user = User.objects.get(Q(username=user) | Q(email=user))
-        reciever_profile = Profile.objects.get(user__id = user.id)
+        receiver_profile = Profile.objects.get(user__id = user.id)
         sender_acct = Account.objects.get(profile__id = profileId)
-        reciever_acct = Account.objects.get(profile__id = reciever_profile.id)
+        receiver_acct = Account.objects.get(profile__id = receiver_profile.id)
         if float(sender_acct.balance) < float(amount):
             return JsonResponse({'status': 'failed', 'code': 'Insufficient Account Balance!'})
         sender_acct.balance = float(sender_acct.balance) - float(total_debit)
-        reciever_acct.balance = float(reciever_acct.balance) + float(amount)
+        receiver_acct.balance = float(receiver_acct.balance) + float(amount)
+        try:
+            sender_ts = Transaction.objects.create(transact_id=generate_transact_key(30), profile=profile, type='withdraw',
+                                                   status='approved',progress="completed", amount=total_debit)
+            receiver_ts = Transaction.objects.create(transact_id=generate_transact_key(30), profile=receiver_profile,
+                                                     type='received', status='approved',progress="completed", amount=amount)
+        except:
+            pass
         sender_acct.save()
-        reciever_acct.save()
+        receiver_acct.save()
+
         return JsonResponse({'status': 'success', 'code': 'transfer successfull'})
     except User.DoesNotExist:
         return JsonResponse({'status': 'failed', 'code': 'No account found on our database!'})
