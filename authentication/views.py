@@ -56,7 +56,7 @@ class Auth(APIView):
         referral = None
         if 'referral' in data:
             try:
-                referral = Profile.objects.get(id=data['referral'])
+                referral = Profile.objects.get(user__username=data['referral'])
             except Exception as e:
                 pass
         profileId = generate_profile_key(60)
