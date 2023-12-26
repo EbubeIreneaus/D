@@ -255,6 +255,7 @@ def withdraw(request):
         Transaction.objects.create(profile=profile, transact_id=key, amount=data['amount'],
                                    channel=data['channel'], address=data['wallet'], type='withdraw')
         return JsonResponse({'status': 'success'})
+
     except Exception as e:
         return JsonResponse({'status': 'failed', 'code': str(e)})
 

@@ -7,4 +7,5 @@ urlpatterns = [
     path('profile_data/', views.change_profile_data),
     path('security/', views.change_security_data),
     path('get_referrals/', views.get_referrals),
+    path('transfer/', views.transfer)
 ]
