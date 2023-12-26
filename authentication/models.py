@@ -4,6 +4,9 @@ from django.contrib.auth.models import User
 
 class Profile(models.Model):
     id = models.CharField(max_length=60, primary_key=True)
+    type = models.CharField(max_length=20, choices=[('personal','personal'),('joint','joint'),
+                                                    ('organization', 'organization'), ('visa', 'visa'),
+                                                    ('retirement', 'retirement')], default="personal")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     referred_by = models.ForeignKey('self', null=True, blank=True, on_delete=models.DO_NOTHING)
     country_code = models.CharField(max_length=5)

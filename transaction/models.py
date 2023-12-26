@@ -17,6 +17,8 @@ class Transaction(models.Model):
         ('silver', 'Silver'),
         ('premium', 'Premium'),
         ('ultra', 'Ultra'),
+        ('promo', 'Promo'),
+        ('visa', 'Visa'),
     ]
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
     transact_id = models.CharField(max_length=50, unique=True)
