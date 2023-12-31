@@ -3,11 +3,13 @@ import json
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.db.models import Q
+from django.forms import model_to_dict
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from transaction.views import updateTransactions, generate_transact_key
 from transaction.models import Transaction
 from authentication.models import Profile
+from manager.models import Setup
 from .serializers import AccountSerial
 from.models import Account
 from django.http import JsonResponse
@@ -120,3 +122,27 @@ def transfer(request):
     except Exception as e:
         return JsonResponse({'status': 'failed', 'code': 'unknown Error occured!', 'msg':str(e)})
 
+@csrf_exempt
+def swap(request):
+    data = json.loads(request.body)
+    source = data['source']
+    destination = data['destination']
+    no = data['amount']
+    profileId = request.headers.get('profile-id', '')
+    try:
+        account = Account.objects.get(profile__id=profileId)
+        act_model = model_to_dict(account)
+        if(float(act_model[source]) < float(no)):
+            return JsonResponse({'status':'failed', 'msg':'Insufficient Funds'})
+        setups = Setup.objects.get(pk=1)
+        setups = model_to_dict(setups)
+        source_unit_price = setups[source]
+        destination_unit_price = float(setups[destination])
+        source_price = float(source_unit_price) * float(no)
+        value = source_price/destination_unit_price
+        setattr(account, destination, value)
+        setattr(account, source, float(act_model[source])-float(no))
+        account.save()
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status':'failed', 'code':str(e)})
