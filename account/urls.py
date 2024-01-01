@@ -9,4 +9,5 @@ urlpatterns = [
     path('get_referrals/', views.get_referrals),
     path('transfer/', views.transfer),
     path('swap/', views.swap),
+    path('crypto/', views.getCrypto),
 ]

@@ -10,7 +10,7 @@ from transaction.views import updateTransactions, generate_transact_key
 from transaction.models import Transaction
 from authentication.models import Profile
 from manager.models import Setup
-from .serializers import AccountSerial
+from .serializers import AccountSerial, CryptoSerial
 from.models import Account
 from django.http import JsonResponse
 from authentication.serializers import ProfileSerial
@@ -132,17 +132,37 @@ def swap(request):
     try:
         account = Account.objects.get(profile__id=profileId)
         act_model = model_to_dict(account)
-        if(float(act_model[source]) < float(no)):
-            return JsonResponse({'status':'failed', 'msg':'Insufficient Funds'})
+        if source == 'usd':
+            if float(act_model['balance']) < float(no):
+                return JsonResponse({'status': 'failed', 'msg': 'Insufficient Funds'})
+        else:
+            if float(act_model[source]) < float(no):
+                return JsonResponse({'status': 'failed', 'msg': 'Insufficient Funds'})
         setups = Setup.objects.get(pk=1)
         setups = model_to_dict(setups)
-        source_unit_price = setups[source]
+        source_unit_price = float(setups[source])
         destination_unit_price = float(setups[destination])
         source_price = float(source_unit_price) * float(no)
         value = source_price/destination_unit_price
-        setattr(account, destination, value)
-        setattr(account, source, float(act_model[source])-float(no))
+        if destination == 'usd':
+            setattr(account, 'balance', value)
+        else:
+            setattr(account, destination, value)
+        if source == 'usd':
+            setattr(account, 'balance', float(act_model['balance'])-float(no))
+        else:
+            setattr(account, source, float(act_model[source])-float(no))
+
         account.save()
         return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status':'failed', 'code':str(e)})
+
+def getCrypto(request):
+    profileId = request.headers.get('profile-id')
+    try:
+        account = Account.objects.get(profile__id=profileId)
+        crypt = CryptoSerial(account, many=False)
+        return JsonResponse(crypt.data, safe=False)
     except Exception as e:
         return JsonResponse({'status':'failed', 'code':str(e)})
