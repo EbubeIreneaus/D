@@ -289,3 +289,26 @@ def pay_slip(request):
         return JsonResponse({'status': 'success'})
     except:
         return JsonResponse({'status': 'failed'})
+
+def sendOTP(request):
+    profileId = request.GET.get('profileId', '')
+    key = generate_transact_key(5)
+    try:
+        profile = Profile.objects.get(id=profileId)
+        profile.key = key
+        email = profile.user.email
+    except Exception as e:
+        return HttpResponse({'status': 'failed', 'code': str(e)}, status=404)
+
+    mail = Mail(subject="Withdrawal Request")
+    mail.recipient = [email]
+    mail.html_message = '<div style="padding:30px 0; text-align:center; background-color:darkgreen; color:lightgreen">' \
+                        '<h3>Digital Assets</h3> </div><div style="padding:20px 10px; font-size:large; "> ' \
+                        f'<h3>Hello {profile.user.username}</h3>' \
+                        '<p style="color:grey">You have initiated a withdrawal request, use ' \
+                        f'the OTP: <b>{key}</b> to complete your request <br>Thanks, <br>Digital Assets</p></br>' \
+                        '<div style="padding:20px 0; text-align:center; background-color:darkgreen; color:lightgreen;' \
+                        ' font-size:x-small"> <h3>&copy; Digital Assets all right reserved</h3> </div> </div>'
+    mail.send_mail()
+    profile.save()
+    return JsonResponse({'status': 'success', 'profileId': profile.id})

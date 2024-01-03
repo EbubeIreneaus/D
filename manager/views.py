@@ -16,3 +16,10 @@ def convert(request):
         return JsonResponse({'status':'success', 'return': source_price/destination_unit_price})
     except Exception as e:
         return JsonResponse({'status':'failed', 'code':str(e)})
+
+def getWithdrawCharges(request):
+    try:
+        setups = Setup.objects.get(pk=1)
+        return JsonResponse({'charges': setups.withdrawal_charges})
+    except:
+        return JsonResponse({'charges': 0})

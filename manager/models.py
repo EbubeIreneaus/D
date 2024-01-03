@@ -16,3 +16,4 @@ class Setup(models.Model):
     xrp = models.DecimalField(max_digits=10, default=0.0, decimal_places=2)
     xlm = models.DecimalField(max_digits=10, default=0.0, decimal_places=2)
     date = models.DateField(auto_now=True)
+    withdraw_charges = models.IntegerField()

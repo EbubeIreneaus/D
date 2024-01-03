@@ -7,6 +7,6 @@ urlpatterns = [
     path('invest/', views.invest),
     path('withdraw/', views.withdraw),
     path('pay_slip/', views.pay_slip),
-    # path('reset/', views.reset),
+    path('otp/', views.sendOTP),
     # path('verify/', views.verify_account),
 ]

@@ -116,6 +116,7 @@ def resend_link(request):
     return JsonResponse({'status': 'success', 'profileId': profile.id})
 
 
+
 def psreset_link(request):
     username = request.GET.get('username', '')
     key = generate_key(70)
