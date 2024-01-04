@@ -49,7 +49,7 @@ def create_investment(instance_pk):
             profile_id = ts.profile.id
             account = Account.objects.select_for_update().get(profile__id=profile_id)
             now = datetime.datetime.now()
-            tplan = {'standard': 125, 'silver': 168, 'premium': 720, 'ultra': 2160}
+            tplan = {'standard': 120, 'silver': 168, 'premium': 720, 'ultra': 2160, 'promo':720, "visa":336}
             expires = datetime.datetime.fromtimestamp(time.time() + (60 * 60 * tplan[ts.plan]))
             amount = ts.amount
             ts.start_date = now

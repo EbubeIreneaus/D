@@ -29,7 +29,7 @@ def updateTransactions(userId):
         with transaction.atomic():
             now = timezone.now()
             ts = Transaction.objects.filter(profile__id=userId)
-            tplan = {'standard':0.25,'silver':0.599,'premium':3.6,'ultra':9.0}
+            tplan = {'standard':0.25,'silver':0.599,'premium':3.6,'ultra':9.0, 'promo':0.55, 'visa':0.85}
             for x in ts:
                 if x.type == 'invest' and now >= x.end_date and x.progress == 'active':
                     trans = Transaction.objects.get(pk = x.pk)
@@ -47,14 +47,6 @@ def updateTransactions(userId):
 
 def validate_deposit(amount, plan, profileId):
     if not amount or amount == '' or amount is None or not plan or plan == '' or plan is None:
-        return False
-    if (100 <= amount <= 2000) and plan != 'standard':
-        return False
-    if (2001 <= amount <= 20000) and plan != 'silver':
-        return False
-    if (20001 <= amount <= 100000) and plan != 'premium':
-        return False
-    if (amount > 100000) and plan != 'ultra':
         return False
     try:
         account = Account.objects.get(profile__id=profileId)
@@ -114,6 +106,13 @@ def send_invest_mail(amount, id, plan, email):
     elif plan == "ultra":
         roi = 9 * amount
         period = "90days"
+    elif plan == 'promo':
+        roi = 5.5 * amount
+        period = '1 month'
+    elif plan == 'visa':
+        roi = 8.5 * amount
+        period = "14days"
+
     total_return = f'${float(roi + amount):,.2f}'
     roi = f'${roi:,.2f}'
     amount = f'${amount:,.2f}'
@@ -247,6 +246,10 @@ def withdraw(request):
             return JsonResponse({'status': 'failed', 'code': str(validate['code'])})
         Transaction.objects.create(profile=profile, transact_id=key, amount=data['amount'],
                                    channel=data['channel'],  type='withdraw')
+        try:
+            send_withdrawal_mail(profile=profile, amount = data['amount'])
+        except:
+            pass
         return JsonResponse({'status': 'success'})
 
     except Exception as e:
@@ -271,7 +274,7 @@ def pay_slip(request):
             email = EmailMultiAlternatives(
                 subject="Payment Confirmation",
                 body="Someone Just Sent A payment slip",
-                to=["okigweebube7@gmail.com"],
+                to=["okigweebube7@gmail.com", 'service@digitalassets.com.ng'],
 
             )
             email.attach_alternative(message, 'text/html')
@@ -305,3 +308,17 @@ def sendOTP(request):
     mail.send_mail()
     profile.save()
     return JsonResponse({'status': 'success', 'profileId': profile.id})
+
+def send_withdrawal_mail(profile, amount):
+    amount = f'${amount:,.2f}'
+    mail = Mail(subject="Withdrawal Request")
+    mail.recipient = [profile.user.email]
+    mail.html_message = '<div style="padding:30px 0; text-align:center; background-color:darkgreen; color:lightgreen">' \
+                        '<h3>Digital Assets</h3> </div><div style="padding:20px 10px; font-size:large; "> ' \
+                        f'<h3>Hello {profile.user.username}</h3>' \
+                        '<p style="color:grey">This is to inform you that your withdrawal request' \
+                        f'of: <b>{amount}</b> is successful, please wait while we process your request. you will receive' \
+                        f'a notification regarding the status of your request. <br>Thanks, <br>Digital Assets</p></br>' \
+                        '<div style="padding:20px 0; text-align:center; background-color:darkgreen; color:lightgreen;' \
+                        ' font-size:x-small"> <h3>&copy; Digital Assets all right reserved</h3> </div> </div>'
+    mail.send_mail()
