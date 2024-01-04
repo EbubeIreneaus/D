@@ -9,6 +9,7 @@ from django.forms.models import model_to_dict
 from account.models import Account
 import time
 from django.db import transaction
+from manager.models import Setup
 import datetime
 # Create your models here.
 class Transaction(models.Model):
@@ -23,8 +24,7 @@ class Transaction(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
     transact_id = models.CharField(max_length=50, unique=True)
     plan = models.CharField(max_length=12, choices=plans, null=True, blank=True)
-    channel = models.CharField(max_length=15, choices=[('BTC', 'BTC'), ('TETHER USDT', 'TETHER USDT'), ("BNB", "BNB"),("ETHEREUM", "ETHEREUM")],
-                               default='BTC', null=True, blank=True)
+    channel = models.CharField(max_length=15, default='BTC', null=True, blank=True)
     type = models.CharField(max_length=9, choices=[('deposit','deposit'),("invest", 'invest'),('withdraw', 'withdraw'),
                                                    ('referral','referral'), ("bonus","bonus"), ("received","received")], default='deposit')
     amount = models.DecimalField(decimal_places=2, max_digits=10)
@@ -99,8 +99,10 @@ def transaction_changed(instance_pk):
                     except:
                         pass
                 elif ts.type == 'withdraw':
-                    account.last_withdraw = amount
-                    account.balance = account.balance - amount
+                    setup = Setup.objects.get(pk=1)
+                    withdrawal_charges = float(setup.withdraw_charges)/100 * float(amount)
+                    account.last_withdraw = withdrawal_charges + float(amount)
+                    account.balance = float(account.balance) - (withdrawal_charges + float(amount))
                     ts.progress = 'completed'
                     account.save()
                     ts.save()

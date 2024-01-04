@@ -208,21 +208,15 @@ def invest(request):
         return JsonResponse({'status': 'failed', 'code': str(e)})
 
 
-def validate_withdraw(amount, profileid, wallet_address, password):
+def validate_withdraw(amount, profileid):
     try:
         amount = int(amount)
-        if re.search('[!@#$%^()-+=:;\'\"<>?~]', wallet_address):
-            raise customException('Invalid Wallet Address')
         if type(amount) != int:
             raise customException('amount must be a number, undefined character given')
         try:
             profile = Profile.objects.get(id=profileid)
-            user = User.objects.get(id=profile.user.id)
-            user = authenticate(username=user.username, password=password)
-            if user is None:
-                raise customException("Incorrect Password")
-        except:
-            raise customException("Incorrect Password")
+        except Profile.DoesNotExist:
+            raise customException("User Not Found")
         account = Account.objects.get(profile__id=profileid)
         if account.balance < amount:
             raise customException('Insufficient Funds !!!')
@@ -248,12 +242,11 @@ def withdraw(request):
         except Profile.DoesNotExist:
             return JsonResponse({'status': 'failed', 'code': 'user_not_found'})
 
-        validate = validate_withdraw(amount=data['amount'], profileid=profile.id, wallet_address=data['wallet'],
-                                     password=data['password'])
+        validate = validate_withdraw(amount=data['amount'], profileid=profile.id)
         if validate['status'] != 'true':
             return JsonResponse({'status': 'failed', 'code': str(validate['code'])})
         Transaction.objects.create(profile=profile, transact_id=key, amount=data['amount'],
-                                   channel=data['channel'], address=data['wallet'], type='withdraw')
+                                   channel=data['channel'],  type='withdraw')
         return JsonResponse({'status': 'success'})
 
     except Exception as e:
