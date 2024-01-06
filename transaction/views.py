@@ -46,11 +46,11 @@ def updateTransactions(userId):
     return True
 
 def validate_deposit(amount, plan, profileId):
-    if not amount or amount == '' or amount is None or not plan or plan == '' or plan is None:
+    if amount == '' or plan == '':
         return False
     try:
         account = Account.objects.get(profile__id=profileId)
-        if account.balance < amount:
+        if float(account.balance) < float(amount):
             return False
     except Exception:
         return False
@@ -194,8 +194,8 @@ def invest(request):
         transaction = Transaction(profile=profile, transact_id=key, plan=data['plan'], amount=data['amount'],
                                   type='invest')
         account = Account.objects.get(profile__id=data['profileId'])
-        account.balance = account.balance - data['amount']
-        account.active_investment += data['amount']
+        account.balance = float(account.balance) - float(data['amount'])
+        account.active_investment = float(account.active_investment) + float(data['amount'])
         transaction.save()
         account.save()
         try:
