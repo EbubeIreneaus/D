@@ -37,8 +37,8 @@ def updateTransactions(userId):
                     earning = float(tplan[trans.plan]) * float(trans.amount)
                     trans.progress = 'completed'
                     account.balance = float(account.balance) + float(trans.amount) + float(earning)
-                    account.active_investment -= trans.amount
-                    account.Total_earnings = float(account.Total_earnings) + earning
+                    account.active_investment = float(account.active_investment) - float(trans.amount)
+                    account.Total_earnings = float(account.Total_earnings) + float(earning)
                     trans.save()
                     account.save()
     except Exception as e:
