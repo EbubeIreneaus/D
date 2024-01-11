@@ -20,6 +20,6 @@ def convert(request):
 def getWithdrawCharges(request):
     try:
         setups = Setup.objects.get(pk=1)
-        return JsonResponse({'charges': setups.withdrawal_charges})
+        return JsonResponse({'charges': setups.withdraw_charges})
     except:
         return JsonResponse({'charges': 0})

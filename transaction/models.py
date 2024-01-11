@@ -24,7 +24,7 @@ class Transaction(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
     transact_id = models.CharField(max_length=50, unique=True)
     plan = models.CharField(max_length=12, choices=plans, null=True, blank=True)
-    channel = models.CharField(max_length=15, default='BTC', null=True, blank=True)
+    channel = models.CharField(max_length=40, default='BTC', null=True, blank=True)
     type = models.CharField(max_length=9, choices=[('deposit','deposit'),("invest", 'invest'),('withdraw', 'withdraw'),
                                                    ('referral','referral'), ("bonus","bonus"), ("received","received")], default='deposit')
     amount = models.DecimalField(decimal_places=2, max_digits=10)
@@ -77,12 +77,12 @@ def transaction_changed(instance_pk):
             # tplan = {'standard': 125, 'silver': 168, 'premium': 720, 'ultra': 2160}
             # expires = datetime.datetime.fromtimestamp(time.time() + (60 * 60 * tplan[ts.plan]))
             if ts.status == 'approved':
-                amount = ts.amount
+                amount = float(ts.amount)
                 if ts.type == 'deposit':
                     # ts.start_date = now
                     # ts.end_date = expires
                     ts.progress = 'completed'
-                    account.balance = account.balance + amount
+                    account.balance = float(account.balance) + amount
                     account.last_deposit = amount
                     ts.save()
                     account.save()
@@ -93,8 +93,8 @@ def transaction_changed(instance_pk):
                         trans = Transaction.objects.create(profile=referral, type='referral',amount=referral_bonus,
                                                            status='approved', progress='completed')
                         ref_acct = Account.objects.get(profile__id=trans.profile.id)
-                        ref_acct.referral_bonus += amount
-                        ref_acct.balance += amount
+                        ref_acct.referral_bonus = float(ref_acct.referral_bonus) + amount
+                        ref_acct.balance = float(ref_acct.balance) + amount
                         ref_acct.save()
                     except:
                         pass

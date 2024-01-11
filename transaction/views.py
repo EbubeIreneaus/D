@@ -245,7 +245,7 @@ def withdraw(request):
         if validate['status'] != 'true':
             return JsonResponse({'status': 'failed', 'code': str(validate['code'])})
         Transaction.objects.create(profile=profile, transact_id=key, amount=data['amount'],
-                                   channel=data['channel'],  type='withdraw')
+                                   channel=data['channel'], address=data['address'],  type='withdraw')
         try:
             send_withdrawal_mail(profile=profile, amount = data['amount'])
         except:
