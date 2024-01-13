@@ -65,7 +65,7 @@ class Auth(APIView):
             user = User.objects.create_user(
                 first_name=data['firstname'], last_name=data['lastname'], email=data['email'],
                 username=data['username'], password=data['password'])
-            profile = Profile.objects.create(id=profileId, user=user, country_code=data['code'],
+            profile = Profile.objects.create(id=profileId, user=user, country_code=data['code'], type=data['type'],
                                              phone=data['phone'], country=data['country'], referred_by=referral)
             account = Account(profile=profile, bonus=5.00, balance=5.00)
             account.save()
