@@ -51,13 +51,13 @@ def create_investment(instance_pk):
             now = datetime.datetime.now()
             tplan = {'standard': 120, 'silver': 168, 'premium': 720, 'ultra': 2160, 'promo':720, "visa":336}
             expires = datetime.datetime.fromtimestamp(time.time() + (60 * 60 * tplan[ts.plan]))
-            amount = ts.amount
+            amount = float(ts.amount)
             ts.start_date = now
             ts.end_date = expires
             ts.progress = 'active'
             ts.status = 'approved'
-            account.active_investment += amount
-            account.balance -= amount
+            account.active_investment = float(account.active_investment) + amount
+            account.balance = float(account.balance) + amount
             ts.save()
             account.save()
             print('Completed')
