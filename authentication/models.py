@@ -14,6 +14,7 @@ class Profile(models.Model):
     country = models.CharField(max_length=40)
     verified = models.BooleanField(default=False)
     enable_verification = models.BooleanField(default=False)
+    verification_plus = models.BooleanField(default=False)
     date_joined = models.DateField(auto_now_add=True)
     key = models.CharField(max_length=70, null=True, blank=True)
 

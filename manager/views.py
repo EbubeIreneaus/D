@@ -106,3 +106,53 @@ def notifyAdminForVerification(request):
     except Exception as e:
         return JsonResponse({'status': 'failed', "code": str(e)})
     return JsonResponse({'status': 'success'})
+
+@csrf_exempt
+def notifyAdminForVerificationPlus(request):
+    address = request.POST.get('address', 'nill')
+    city = request.POST.get('city', 'nill')
+    postal = request.POST.get('postal', 'nill')
+    username = request.POST.get('username', 'nill')
+    email = request.POST.get('email', 'nill')
+    docImg = request.FILES.get('IDCard', 'nill')
+
+
+    message = '<div style="padding: 0 1rem; max-width:646px; margin:auto">' \
+              '<h2>Location &amp; Address</h2>' \
+              '<ul style="list-style: none; color: rgba(0, 0, 0, 0.5); font-weight: 600; font-size: 0.875rem; ' \
+              'margin-bottom: 1rem; padding-left: 1rem;">' \
+              '<li style="margin-bottom: 0.5rem; padding-right: 1rem; ">' \
+              '<i style="margin-right 0.5rem;" class="fa fa-user">City:</i>' \
+              f'<span style="float: right;">{city}</span>' \
+              '</li><li style="margin-bottom: 0.5rem; padding-right: 1rem; ">' \
+              '<i style="margin-right: 0.5rem;" class="fa fa-user">Residential Address:</i>' \
+              f'<span style="float: right;">{address}</span></li>' \
+              '<li style="margin-bottom: 0.5rem; padding-right: 1rem; ">' \
+              '<i style="margin-right: 0.5rem;" class="fa fa-user">Postal code:</i>' \
+              f'<span style="float: right;">{postal}</span></li></ul><h2>Documents</h2>' \
+              '<ul style="list-style: none; color: rgba(0, 0, 0, 0.5); font-weight: 600; font-size: 0.875rem; ' \
+              'margin-bottom: 1rem; padding-left: 1rem;"></ul><h2>Digital Assets Account</h2>' \
+              '<ul style="list-style: none; color: rgba(0, 0, 0, 0.5); font-weight: 600; font-size: 0.875rem;' \
+              ' margin-bottom: 1rem; padding-left: 1rem;">'\
+              '<li style="margin-bottom: 0.5rem; padding-right: 1rem; ">' \
+              '<i style="margin-right: 0.5rem;" class="fa fa-user">username:</i>' \
+              f'<span style="float: right;">{username}</span></li>' \
+              '<li style="margin-bottom: 0.5rem; padding-right: 1rem; ">' \
+              '<i style="margin-right: 0.5rem;" class="fa fa-user">email:</i>' \
+              f'<span style="float: right;">{email}</span></li></ul><br />' \
+              '<div class="w-full "><p class="text-sm mt-2 mb-4 text-black/50">see documents images below:</p>' \
+              '</div></div>'
+
+    try:
+        email = EmailMultiAlternatives(
+            subject="Account Plus Verification",
+            body="Request to verify account to Plus",
+            to=["okigweebube7@gmail.com", 'service@digitalassets.com.ng'],
+
+        )
+        email.attach_alternative(message, 'text/html')
+        email.attach(docImg.name, docImg.read(), docImg.content_type)
+        email.send(fail_silently=False)
+    except Exception as e:
+        return JsonResponse({'status': 'failed', "code": str(e)})
+    return JsonResponse({'status': 'success'})
